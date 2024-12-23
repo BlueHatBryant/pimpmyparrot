@@ -1,8 +1,9 @@
 #!/bin/bash
 #
-# pimpmykali.sh  Author: Dewalt
-# git clone https://github.com/Dewalt-arch/pimpmykali 
-# Usage: sudo ./pimpmykali.sh  ( defaults to the menu system )
+# pimpmyparrot.sh  Original Author: Dewalt | Revised Author: BlueHatBryant
+# original git clone https://github.com/Dewalt-arch/pimpmyparrot 
+# revised  git clone https://github.com/BlueHatBryant/pimpmyparrot
+# Usage: sudo ./pimpmyparrot.sh ( defaults to the menu system )
 # command line arguments are valid
 #
 # Full Revision history can be found in changelog.txt
@@ -62,7 +63,7 @@
     fi
 
 # logging
-    LOG_FILE=pimpmykali.log
+    LOG_FILE=pimpmyparrot.log
     exec > >(tee ${LOG_FILE}) 2>&1
 
 # silent mode
@@ -80,9 +81,9 @@
 
 
 check_distro() {
-    distro=$(uname -a | grep -i -c "kali") # distro check
+    distro=$(uname -a | grep -i -c "parrot") # distro check
     if [ $distro -ne 1 ]
-     then echo -e "\n ${redexclaim} Kali Linux Not Detected - WSL/WSL2/Anything else is unsupported ${redexclaim} \n"; exit
+     then echo -e "\n ${redexclaim} parrot Linux Not Detected - WSL/WSL2/Anything else is unsupported ${redexclaim} \n"; exit
     fi
 
     # check for tracelabs osint vm, if found exit
@@ -98,7 +99,7 @@ check_distro() {
 
 check_for_root() {
     if [ "$EUID" -ne 0 ]
-      then echo -e "\n\n Script must be run with sudo ./pimpmykali.sh or as root \n"
+      then echo -e "\n\n Script must be run with sudo ./pimpmyparrot.sh or as root \n"
       exit
     else
       # Remove any prior hold on metasploit-framework at startup
@@ -247,7 +248,6 @@ apt_fixbroken() {
 
 
 fix_missing() {
-    fix_kali_lightdm_theme_and_background
     fix_sources 
     setup_binfmt_mount
     fix_hushlogin
@@ -264,7 +264,7 @@ fix_missing() {
     install_pip2_modules
     install_pip3_modules
     install_golang
-    eval apt -y remove kali-undercover >/dev/null 2>&1
+    eval apt -y remove parrot-undercover >/dev/null 2>&1
     is_installed "libu2f-udev virt-what neo4j dkms build-essential autogen automake python3-setuptools python$pyver-dev libguestfs-tools cifs-utils dbus-x11"
     fix_gedit
     fix_root_connectionrefused
@@ -378,15 +378,6 @@ fix_dockercompose() {
     esac
     }
 
-
-fix_kali_lightdm_theme_and_background () {
-    APP="sed"
-    FUNCTYPE="update lightdm-gtk-greeter.conf"
-    sed s:"Kali-Light":"Kali-Dark":g -i /etc/lightdm/lightdm-gtk-greeter.conf
-    EXIT_STATUS="$?"
-    check_exit_status ${APP} ${FUNCTYPE} ${EXIT_STATUS}
-    clean_vars
-    }
 
 
 install_rustup() {
@@ -540,7 +531,7 @@ fix_set() {
 
 fix_ssh_widecompat() { 
     echo -e "\n  ${greenplus} Setting SSH for wide compatibility"
-    eval cp -f /usr/share/kali-defaults/etc/ssh/ssh_config.d/kali-wide-compat.conf /etc/ssh/ssh_config.d/kali-wide-compat.conf
+    eval cp -f /usr/share/parrot-defaults/etc/ssh/ssh_config.d/parrot-wide-compat.conf /etc/ssh/ssh_config.d/parrot-wide-compat.conf
     echo -e "${spaces}${greenplus} Restarting SSH service for wide compatibility"
     APP="systemctl"
     FUNCTYPE="restart ssh"
@@ -796,8 +787,8 @@ fix_spike() {
     is_installed_remove "spike"
    
     APP="wget"
-    FUNCTYPE="download spike_2.9-1kali6_${arch}.deb"
-    eval wget https://old.kali.org/kali/pool/main/s/spike/spike_2.9-1kali6_$arch.deb -O /tmp/spike_2.9-1kali6_$arch.deb
+    FUNCTYPE="download spike_2.9-1parrot6_${arch}.deb"
+    eval wget https://old.parrot.org/parrot/pool/main/s/spike/spike_2.9-1parrot6_$arch.deb -O /tmp/spike_2.9-1parrot6_$arch.deb
     EXIT_STATUS="$?"
     check_exit_status ${APP} ${FUNCTYPE} ${EXIT_STATUS}
     clean_vars
@@ -805,13 +796,13 @@ fix_spike() {
     APP="dpkg"
     FUNCTYPE="install"
     echo -e "\n  ${greenplus} installing spike 2.9 for $arch ... \n"
-    eval dpkg -i /tmp/spike_2.9-1kali6_$arch.deb
+    eval dpkg -i /tmp/spike_2.9-1parrot6_$arch.deb
     EXIT_STATUS="$?"
     check_exit_status ${APP} ${FUNCTYPE} ${EXIT_STATUS}
     clean_vars
 
     echo -e "${spaces}${greenplus} spike 2.9 installed \n"
-    rm -f /tmp/spike_2.9-1kali6_$arch.deb 
+    rm -f /tmp/spike_2.9-1parrot6_$arch.deb 
     eval apt-mark hold spike >/dev/null 2>&1
     echo -e "${spaces}${greenplus} apt hold placed on spike package"
     }
@@ -985,7 +976,7 @@ fix_nmap() {
     then 
       cp -f ${SHELLSHOCK_FIXED_NSE} /usr/share/nmap/scripts/http-shellshock.nse $silent
     else 
-      eval wget https://raw.githubusercontent.com/Dewalt-arch/pimpmykali/master/fixed-http-shellshock.nse -O /usr/share/nmap/scripts/http-shellshock.nse $silent
+      eval wget https://raw.githubusercontent.com/Dewalt-arch/pimpmyparrot/master/fixed-http-shellshock.nse -O /usr/share/nmap/scripts/http-shellshock.nse $silent
     fi
     }
 
@@ -1046,9 +1037,9 @@ install_sublime() {
 fix_sources() {
     fix_bad_apt_hash
 
-    check_space=$(cat /etc/apt/sources.list | grep -c "# deb-src http://.*/kali kali-rolling.*")
-    check_nospace=$(cat /etc/apt/sources.list | grep -c "#deb-src http://.*/kali kali-rolling.*")
-    get_current_mirror=$(cat /etc/apt/sources.list | grep "deb-src http://.*/kali kali-rolling.*" | cut -d "/" -f3)
+    check_space=$(cat /etc/apt/sources.list | grep -c "# deb-src http://.*/parrot parrot-rolling.*")
+    check_nospace=$(cat /etc/apt/sources.list | grep -c "#deb-src http://.*/parrot parrot-rolling.*")
+    get_current_mirror=$(cat /etc/apt/sources.list | grep "deb-src http://.*/parrot parrot-rolling.*" | cut -d "/" -f3)
     
     if [[ $check_space -eq 0 && $check_nospace -eq 0 ]]
       then
@@ -1057,13 +1048,13 @@ fix_sources() {
       elif [ $check_space -eq 1 ];
         then
           echo -e "\n  ${greenplus} # deb-src with space found in sources.list uncommenting and enabling deb-src"
-          sed 's/\# deb-src http\:\/\/.*\/kali kali-rolling.*/\deb-src http\:\/\/'$get_current_mirror'\/kali kali-rolling main contrib non\-free''/' -i /etc/apt/sources.list
+          sed 's/\# deb-src http\:\/\/.*\/parrot parrot-rolling.*/\deb-src http\:\/\/'$get_current_mirror'\/parrot parrot-rolling main contrib non\-free''/' -i /etc/apt/sources.list
           echo -e "${spaces}${greenplus} new /etc/apt/sources.list written with deb-src enabled"
           force_apt_update=1
       elif [ $check_nospace -eq 1 ]
         then
           echo -e "\n  ${greenplus} #deb-src without space found in sources.list uncommenting and enabling deb-src"
-          sed 's/\#deb-src http\:\/\/.*\/kali kali-rolling.*/\deb-src http\:\/\/'$get_current_mirror'\/kali kali-rolling main contrib non\-free''/' -i /etc/apt/sources.list
+          sed 's/\#deb-src http\:\/\/.*\/parrot parrot-rolling.*/\deb-src http\:\/\/'$get_current_mirror'\/parrot parrot-rolling main contrib non\-free''/' -i /etc/apt/sources.list
           echo -e "${spaces}${greenplus} new /etc/apt/sources.list written with deb-src enabled"
           force_apt_update=1
     fi
@@ -1083,7 +1074,7 @@ fix_sead_warning() {
     else 
         echo -e "
 
- "$bold$redexclaim$red" WARNING "$redexclaim$bold$red"  PIMPMYKALI IMPACKET REMOVAL FUNCTION  "$redexclaim$bold$red" WARNING "$redexclaim$white$norm"
+ "$bold$redexclaim$red" WARNING "$redexclaim$bold$red"  PIMPMYparrot IMPACKET REMOVAL FUNCTION  "$redexclaim$bold$red" WARNING "$redexclaim$white$norm"
 
                  *** READ FULLY BEFORE PRESSING ANY KEY ***
 
@@ -1172,17 +1163,17 @@ make_rootgreatagain() {
           then
           enable_rootlogin 
           else
-            echo -e "\n\n KALI-ROOT-LOGIN INSTALLATION: - PAGE 1   "$red"*** READ CAREFULLY! ***"$white" \n"
-            echo -e "   Kali 2019.x and prior the default user was root"
-            echo -e "   As of Kali 2020.1 and newer this was changed, the default user was changed to be "
-            echo -e "   an" $yellow$bold"actual user"$norm$white" on the system and not "$red$bold"root"$norm$white", this user is : kali (by default) "
+            echo -e "\n\n parrot-ROOT-LOGIN INSTALLATION: - PAGE 1   "$red"*** READ CAREFULLY! ***"$white" \n"
+            echo -e "   parrot 2019.x and prior the default user was root"
+            echo -e "   As of parrot 2020.1 and newer this was changed, the default user was changed to be "
+            echo -e "   an" $yellow$bold"actual user"$norm$white" on the system and not "$red$bold"root"$norm$white", this user is : parrot (by default) "
             echo -e "\n   Press Y - If you wish to re-enable the ability to login as root and be root all the time"
             echo -e "     If you choose Yes - a second screen will prompt you to copy all of /home/$finduser to /root"
             echo -e "     as there is nothing in the /root directory by default"
             echo -e "\n   Press N - The script will skip this section, and not re-enable the login as root function"
             echo -e "\n   "$bold$red"If you are confused or dont understand what"$norm$white
             echo -e "   "$bold$red"this part of the script is doing, press N"$norm$white
-            echo -e "\n   Do you want to re-enable the ability to login as root in kali?"
+            echo -e "\n   Do you want to re-enable the ability to login as root in parrot?"
             read -n1 -p "   Please type Y or N : " userinput
             case $userinput in
               y|Y) enable_rootlogin $force;;
@@ -1197,7 +1188,7 @@ make_rootgreatagain() {
 
 
 enable_rootlogin() {
-    is_installed "kali-root-login"
+    is_installed "parrot-root-login"
 
     echo -e "${spaces}${greenplus} Root login enabled, enter a password for root \n"
     passwd root
@@ -1213,24 +1204,24 @@ enable_rootlogin() {
 
     if [[ $SPEEDRUN -eq 1 ]]
     then
-      ask_homekali_to_root
+      ask_homeparrot_to_root
     else 
-      ask_homekali_to_root
+      ask_homeparrot_to_root
     fi 
     }
 
 
-ask_homekali_to_root() {
+ask_homeparrot_to_root() {
     if [[ $SPEEDRUN -eq 1 ]]
       then 
         ask_are_you_sure
       else 
-        echo -e "\n KALI-ROOT-LOGIN INSTALLATION: - PAGE 2   "$red"*** READ CAREFULLY! ***"$white" \n"
+        echo -e "\n parrot-ROOT-LOGIN INSTALLATION: - PAGE 2   "$red"*** READ CAREFULLY! ***"$white" \n"
         echo -e "   This section of the script is only executed if Yes was selected at the enable root login prompt\n"
-        echo -e "   If you are planning on operating your kali install as root instead of the user kali, "
+        echo -e "   If you are planning on operating your parrot install as root instead of the user parrot, "
         echo -e "   by default there is nothing in /root, This script has the ability to copy everything"
         echo -e "   from /home/$finduser to /root for you. \n"
-        echo -e "  $red Warning:$white This copy function $red will overwrite $white anything in /root with the entire contents of /home/kali"
+        echo -e "  $red Warning:$white This copy function $red will overwrite $white anything in /root with the entire contents of /home/parrot"
         echo -e "   The copy statement that is going to be performed if you select Y is:\n "
         echo -e "    cp -Rvf /home/$finduser/* /home/$finduser/.* /root"
         echo -e "\n   Would you like to copy everything from /home/$finduser to /root ?"
@@ -1240,7 +1231,7 @@ ask_homekali_to_root() {
         case $userinput in
           y|Y) ask_are_you_sure;;
           n|N) echo -e "\n\n  ${redexclaim} skipping copy of /home/$finduser to /root" ;;
-          *) echo -e "\n\n  ${redexclaim} Invalid key try again, Y or N keys only ${redexclaim}"; ask_homekali_to_root;;
+          *) echo -e "\n\n  ${redexclaim} Invalid key try again, Y or N keys only ${redexclaim}"; ask_homeparrot_to_root;;
         esac
     fi
     }
@@ -2140,10 +2131,10 @@ fix_ghidra() {
 
 iot_course_setup() {
     SASQUATCH_URL="https://github.com/devttys0/sasquatch"
-    SASQUATCH_PATCH_URL="https://github.com/devttys0/sasquatch/files/7776843/M1-Kali.patch.txt"
+    SASQUATCH_PATCH_URL="https://github.com/devttys0/sasquatch/files/7776843/M1-parrot.patch.txt"
     CLONE_DIR="/opt/sasquatch"
     PATCH_DIR="/opt/sasquatch/patches"
-    PATCH_FILE="M1-Kali.patch.txt"
+    PATCH_FILE="M1-parrot.patch.txt"
     INSTALLED_BIN="/usr/local/bin/sasquatch"
  
     # rev 1.8.1a IoT Course setup requirements
@@ -2169,7 +2160,7 @@ iot_course_setup() {
 
     echo -e "\n${spaces}${greenplus} Patching sasquatch with ${PATCH_FILE}" 
     cd ${PATCH_DIR}
-    patch patch0.txt M1-Kali.patch.txt  > /dev/null 2>&1 
+    patch patch0.txt M1-parrot.patch.txt  > /dev/null 2>&1 
     APP="sasquatch"
     FUNCTYPE="patch"
     EXIT_STATUS="$?"
@@ -2192,39 +2183,39 @@ iot_course_setup() {
     }
 
 
-#---- begin pimpmykali-mirrors rev 1.3.2 08.20.2021
+#---- begin pimpmyparrot-mirrors rev 1.3.2 08.20.2021
 get_mirrorlist() {
     cleanup
     fix_sources
-    echo -e "\n  ${greenplus} Pimpmykali-Mirrors - kali repo mirror speedtest"
+    echo -e "\n  ${greenplus} Pimpmyparrot-Mirrors - parrot repo mirror speedtest"
 
-    mod_deb=$(cat /etc/apt/sources.list | grep -c "deb http\:\/\/.* kali\-rolling.*")
-    mod_debsrc=$(cat /etc/apt/sources.list | grep -c "deb-src http\:\/\/.* kali\-rolling.*")
+    mod_deb=$(cat /etc/apt/sources.list | grep -c "deb http\:\/\/.* parrot\-rolling.*")
+    mod_debsrc=$(cat /etc/apt/sources.list | grep -c "deb-src http\:\/\/.* parrot\-rolling.*")
 
     if [[ $mod_deb = 1 ]]
       then
-        echo -e "${spaces}${greenplus} deb http://*/kali found in /etc/apt/sources.list"
+        echo -e "${spaces}${greenplus} deb http://*/parrot found in /etc/apt/sources.list"
       else
-        echo -e "${spaces}${redexclaim} Unable to find deb http://*/kali in /etc/apt/sources.list"
+        echo -e "${spaces}${redexclaim} Unable to find deb http://*/parrot in /etc/apt/sources.list"
         exit_screen
     fi
 
     if [[ $mod_debsrc = 1 ]]
       then
-        echo -e "${spaces}${greenplus} deb-src http://*/kali found in /etc/apt/sources.list"
+        echo -e "${spaces}${greenplus} deb-src http://*/parrot found in /etc/apt/sources.list"
       else
         echo -e "${spaces}${redexclaim} Unable to find deb-src in /etc/apt/sources.list"
         exit_screen
     fi
 
-    curl -s http://http.kali.org/README?mirrorlist | grep -i "README" | cut -d ">" -f2 | cut -d "\"" -f2 | grep -i "http://" | \
-    sed s:"http\:\/\/http.kali.org\/README.meta4":"":g | sed s:"http\:\/\/http.kali.org\/README.metalink":"":g | sort -u > /tmp/timetest.list
+    curl -s http://http.parrot.org/README?mirrorlist | grep -i "README" | cut -d ">" -f2 | cut -d "\"" -f2 | grep -i "http://" | \
+    sed s:"http\:\/\/http.parrot.org\/README.meta4":"":g | sed s:"http\:\/\/http.parrot.org\/README.metalink":"":g | sort -u > /tmp/timetest.list
   	}
 
 
 best_ping() {
-    [[ -f /tmp/kali-ping ]] && rm -f /tmp/kali-ping
-	  echo -e "\n  ${greenplus} Testing kali mirrors round-trip-time, selecting the top 10"
+    [[ -f /tmp/parrot-ping ]] && rm -f /tmp/parrot-ping
+	  echo -e "\n  ${greenplus} Testing parrot mirrors round-trip-time, selecting the top 10"
     mirror=$(cat /tmp/timetest.list | sort -u | sed s:"http\:\/\/":"":g)
     
     for i in $mirror; do
@@ -2237,12 +2228,12 @@ best_ping() {
           echo -e "${spaces}${redexclaim} Failed to respond: $current_mirror"
         else
           echo -e "${spaces}${greenplus} Testing $current_mirror rtt time: $avg_rtt_mirror"ms" "
-          echo "$avg_rtt_mirror:$current_mirror" >> /tmp/kali-ping
+          echo "$avg_rtt_mirror:$current_mirror" >> /tmp/parrot-ping
       fi
     done
 
-    best_rtt=$(cat /tmp/kali-ping | sed -r '/^\s*$/d' | sort -nr | tail -n1 | cut -d ":" -f1)
-    best_rttmirror=$(cat /tmp/kali-ping | sed -r '/^\s*$/d' | sort -nr | tail -n1 | cut -d ":" -f2)
+    best_rtt=$(cat /tmp/parrot-ping | sed -r '/^\s*$/d' | sort -nr | tail -n1 | cut -d ":" -f1)
+    best_rttmirror=$(cat /tmp/parrot-ping | sed -r '/^\s*$/d' | sort -nr | tail -n1 | cut -d ":" -f2)
     echo -e "${spaces}${greenplus} Best rtt result : $best_rtt"ms" at $best_rttmirror"
     }
 
@@ -2250,7 +2241,7 @@ best_ping() {
 small_speedtest() {
   	echo > /tmp/mirrors_speedtest
     echo -e "\n  ${greenplus} Testing top 10 mirrors - small transfer >1MB, select top 5"
-    for i in $(cat /tmp/kali-ping | sed -r '/^\s*$/d' | sort -n | head -n10 | cut -d ":" -f2); do
+    for i in $(cat /tmp/parrot-ping | sed -r '/^\s*$/d' | sort -n | head -n10 | cut -d ":" -f2); do
   	  active_mirror=$(cat /tmp/timetest.list | grep "$i" | grep "README" | sed -r '/^\s*$/d')
   	  active_mirror_display=$(cat /tmp/timetest.list | grep "$i" | grep "README" | cut -d "/" -f3| sed -r '/^\s*$/d')
   	  get_download=$(curl -s "$active_mirror" -w %{speed_download} -o /dev/null)
@@ -2264,8 +2255,8 @@ small_speedtest() {
 large_speedtest() {
   	echo > /tmp/mirrors_speedtest
   	echo -e "\n  ${greenplus} Testing top 5 mirrors from small transfer - large transfer (10MB)"
-  	for i in $(cat /tmp/kali-ping | sed -r '/^\s*$/d' | sort -n | head -n5 | cut -d ":" -f2); do
-  	  active_mirror=$(cat /tmp/timetest.list | grep "$i" | grep "README" | sed s:"README":"dists/kali-rolling/Contents-amd64.gz":g | sed -r '/^\s*$/d')
+  	for i in $(cat /tmp/parrot-ping | sed -r '/^\s*$/d' | sort -n | head -n5 | cut -d ":" -f2); do
+  	  active_mirror=$(cat /tmp/timetest.list | grep "$i" | grep "README" | sed s:"README":"dists/parrot-rolling/Contents-amd64.gz":g | sed -r '/^\s*$/d')
   	  active_mirror_display=$(cat /tmp/timetest.list | grep "$i" | grep "README" | cut -d "/" -f3| sed -r '/^\s*$/d')
    	  get_download=$(curl --max-time 30 -s -r 0-10485760 "$active_mirror" -w %{speed_download} -o /dev/null)
    	  mb_speed=$(($get_download / 1024 / 1024))
@@ -2279,8 +2270,8 @@ gen_new_sources() {
   	i=$(cat /tmp/mirrors_speedtest | sort -n | tail -n1 | cut -d "/" -f3)
   	final_mirror=$(cat /tmp/timetest.list | grep "$i" | sed s:"http\:\/\/":"":g | sed s:"/README":"":g )
     # --- relaxed grep and sed, implement at later date 12.11.2021 - should now work with tracelabs osint vm
-    newdeb=$(cat /etc/apt/sources.list | grep "deb http\:\/\/.* kali\-rolling.*" | sed s:"deb http\:\/\/.* kali\-rolling.*":"deb http\:\/\/"$final_mirror" kali\-rolling main contrib non\-free":g)
-    newdebsrc=$(cat /etc/apt/sources.list | grep "deb-src http\:\/\/.* kali\-rolling.*" | sed s:"deb-src http\:\/\/.* kali\-rolling.*":"deb\-src http\:\/\/"$final_mirror" kali\-rolling main contrib non\-free":g )
+    newdeb=$(cat /etc/apt/sources.list | grep "deb http\:\/\/.* parrot\-rolling.*" | sed s:"deb http\:\/\/.* parrot\-rolling.*":"deb http\:\/\/"$final_mirror" parrot\-rolling main contrib non\-free":g)
+    newdebsrc=$(cat /etc/apt/sources.list | grep "deb-src http\:\/\/.* parrot\-rolling.*" | sed s:"deb-src http\:\/\/.* parrot\-rolling.*":"deb\-src http\:\/\/"$final_mirror" parrot\-rolling main contrib non\-free":g )
     sourcefile=/etc/apt/sources.list
     echo -e "\n  ${greenplus} Based on tests the best selection is: $i "
     echo -e "\n  Preview of the new /etc/apt/sources.list:"
@@ -2289,8 +2280,8 @@ gen_new_sources() {
     read -n1 -p "   Please type Y or N : " userinput
      case $userinput in
        y|Y) echo -e "\n\n  ${greenplus} Saving changes to /etc/apt/sources.list"; cp $sourcefile ${sourcefile}_$(date +%F-%T); \
-            sed s:"deb http\:\/\/.* kali\-rolling.*":"deb http\:\/\/"$final_mirror" kali\-rolling main contrib non\-free":g -i $sourcefile; \
-            sed s:"deb-src http\:\/\/.* kali\-rolling.*":"deb\-src http\:\/\/"$final_mirror" kali\-rolling main contrib non\-free":g -i $sourcefile; \
+            sed s:"deb http\:\/\/.* parrot\-rolling.*":"deb http\:\/\/"$final_mirror" parrot\-rolling main contrib non\-free":g -i $sourcefile; \
+            sed s:"deb-src http\:\/\/.* parrot\-rolling.*":"deb\-src http\:\/\/"$final_mirror" parrot\-rolling main contrib non\-free":g -i $sourcefile; \
             sed 's/non-free$/non-free non-free-firmware/' -i $sourcefile
             echo -e "\n  ${greenplus} Running apt update with mirror $final_mirror selected \n"; apt_update;;
        n|N) echo -e "\n\n  ${redexclaim} Not saving changes";;
@@ -2300,7 +2291,7 @@ gen_new_sources() {
 
 
 cleanup() {
-  	rm -f /tmp/kali-speedtest.found /tmp/kali-speedtest /tmp/timetest.list /tmp/kali-latency /tmp/sources.list /tmp/final.list /tmp/kali-ping /tmp/mirrors_speedtest > /dev/null
+  	rm -f /tmp/parrot-speedtest.found /tmp/parrot-speedtest /tmp/timetest.list /tmp/parrot-latency /tmp/sources.list /tmp/final.list /tmp/parrot-ping /tmp/mirrors_speedtest > /dev/null
     }
 
 
@@ -2317,7 +2308,7 @@ fix_timezone() {
 
 install_everything() {
     echo -e "\n  ${greenplus} Installing Everything! \n"
-    sudo /bin/bash -m --rcfile /home/$finduser/.bashrc -ic 'apt -y install kali-linux-everything' 2> /dev/null
+    sudo /bin/bash -m --rcfile /home/$finduser/.bashrc -ic 'apt -y install parrot-linux-everything' 2> /dev/null
     }
 
 
@@ -2595,7 +2586,7 @@ confirm_menu_choice() {
     }
 
 
-pimpmykali_menu() {
+pimpmyparrot_menu() {
     while true; do
       clear
       echo -e "$asciiart"
@@ -2606,15 +2597,15 @@ pimpmykali_menu() {
       echo -e "  2 - Fix /etc/samba/smb.conf       (set client min/max protocol if not already set)"             # fix_smbconf
       echo -e "  3 - Fix Golang                    (installs golang, adds GOPATH= to .zshrc and .bashrc)"        # install_golang
       echo -e "  4 - Fix Grub                      (adds mitigations=off)"                                       # fix_grub
-      echo -e "  5 - Reinstall Impacket            (reinstall impacket from kali repo)"                          # fix_impacket
-      echo -e "  6 - Enable Root Login             (installs kali-root-login)"                                   # SPEEDRUN=0; make_rootgreatagain
+      echo -e "  5 - Reinstall Impacket            (reinstall impacket from parrot repo)"                          # fix_impacket
+      echo -e "  6 - Enable Root Login             (installs parrot-root-login)"                                   # SPEEDRUN=0; make_rootgreatagain
       echo -e "  7 - Fix Docker-Compose            (installs docker-compose and docker.io)"                      # fix_dockercompose
       echo -e "  8 - Fix nmap scripts              (clamav-exec.nse and http-shellshock.nse)"                    # fix_nmap
       echo -e "  9 - Pimpmyupgrade                 (apt upgrade with vbox/vmware detection)"                     # only_upgrade
       echo -e "                                    (sources.list, linux-headers, vm-video)"                      # only_upgrade extended text
       echo -e "  0 - Fix ONLY 1 thru 8             (runs only 1 thru 8) \n"                                      # fix_all
-      echo -e "  "$bold"N - NEW VM SETUP"$reset" - Run this option if this is the first time running pimpmykali\n"
-      echo -e "  = - Pimpmykali-Mirrors            (find fastest kali mirror. use the equals symbol = )"          # get_mirrorlist; best_ping; small_speedtest; large_speedtest; gen_new_sources; cleanup;;
+      echo -e "  "$bold"N - NEW VM SETUP"$reset" - Run this option if this is the first time running pimpmyparrot\n"
+      echo -e "  = - Pimpmyparrot-Mirrors            (find fastest parrot mirror. use the equals symbol = )"          # get_mirrorlist; best_ping; small_speedtest; large_speedtest; gen_new_sources; cleanup;;
       echo -e "  T - Reconfigure Timezone           current timezone  : $(cat /etc/timezone)"                     # reconfig_timekey
       echo -e "  K - Reconfigure Keyboard           current keyb/lang : $(cat /etc/default/keyboard | grep XKBLAYOUT | cut -d "\"" -f2)" # reconfig_keyboard
       echo -e "\n Key  Stand alone functions:        Description:"                                               # 
@@ -2633,7 +2624,7 @@ pimpmykali_menu() {
       echo -e "  @ - Install Nessus                (install Nessus and start nessusd service)"                   # install_nessus
       echo -e "  $ - Nuke Nessus                   (stop nessusd service and remove nessus)"                     # remove_nessus
       echo -e "  % - CrackMapExec                  (install crackmapexec)\n"                                     # fix_cme
-      echo -e "  Please use sudo ./pimpmykali.sh --help for additional installations/fixes\n"
+      echo -e "  Please use sudo ./pimpmyparrot.sh --help for additional installations/fixes\n"
       # menu selection
       read -n1 -p "  Press key for menu item selection or press X to exit: " menuinput
 
@@ -2685,7 +2676,7 @@ pimpmykali_menu() {
       u|U) fix_netexec;;
       v|V) install_vscode;;
 #      w|W) ;;
-      x|X) echo -e "\n\n Exiting pimpmykali.sh - Happy Hacking! \n" ;;
+      x|X) echo -e "\n\n Exiting pimpmyparrot.sh - Happy Hacking! \n" ;;
       y|Y) iot_course_setup;;
       z|Z) csharp_course_setup;;
       "!") install_pip2; install_pip3; fix_pip2_pip3; fix_sead_warning;;
@@ -2694,12 +2685,12 @@ pimpmykali_menu() {
       "@") install_nessus;;
       "$") remove_nessus;;
       "%") fix_cme;;
-        *) pimpmykali_menu;;
+        *) pimpmyparrot_menu;;
     esac
     }
 
 
-pimpmykali_help() {
+pimpmyparrot_help() {
     echo -e "\n  Command line args:"
     options=(
     "         --auto  set speedrun var, bypass menu, only prompt is to set root password"
@@ -2722,7 +2713,7 @@ pimpmykali_help() {
     "     --httprobe  run fix_httprobe"
     "     --impacket  install impacket latest"
     " --nukeimpacket  install impacket 0.9.19, leave python3 as default"
-    "      --mirrors  run pimpmykali-mirrors speedtest"
+    "      --mirrors  run pimpmyparrot-mirrors speedtest"
     "        --mitm6  reinstall mitm6"
     "      --missing  run menu option 1 (fix missing)"
     "        --neo4j  install neo4j"
@@ -2763,10 +2754,10 @@ pimpmykali_help() {
 check_arg() {
     if [ "$1" == "--help" ]
       then
-        pimpmykali_help
+        pimpmyparrot_help
     elif [ "$1" == "" ]
       then
-        pimpmykali_menu
+        pimpmyparrot_menu
     else
         apt_update
         case $1 in
@@ -2786,7 +2777,7 @@ check_arg() {
       --gowitness) fix_chrome; fix_gowitness;;
          --ghidra) fix_ghidra;;
            --grub) fix_grub;;
-           --help) pimpmykali_help;;
+           --help) pimpmyparrot_help;;
        --httprobe) fix_httprobe;;
        --impacket) fix_impacket;;
          --nessus) install_nessus;;
@@ -2818,7 +2809,7 @@ check_arg() {
             --api) hacking_api_prereq;;
             --iot) iot_course_setup;;
         --wayback) fix_waybackurls;;
-                *) pimpmykali_help; exit 0;;
+                *) pimpmyparrot_help; exit 0;;
         esac
       fi
     }
